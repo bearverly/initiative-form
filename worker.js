@@ -72,7 +72,7 @@ export default {
       // Map Airtable field names → URL param keys
       const paramMap = {
         'SCPO Owner':         'scpo_owner',
-        'SCPT Owner':         'scpt_owner',
+        'Tech Owner':         'scpt_owner',
         'Annual Target':      'annual_target',
         'Measure of Success': 'measure_of_success',
         'FY26 Q3 Update':     'fy26_q3_update',
