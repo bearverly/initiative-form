@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Initiative Update Form</title>
+  <title>QGP Quarterly Target Update</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -58,6 +58,12 @@
       letter-spacing: 0.01em;
     }
 
+    .field-hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
     .badge-locked {
       display: inline-block;
       font-size: 10px;
@@ -102,7 +108,6 @@
       cursor: not-allowed;
     }
 
-    /* Radio group - Initiative Health */
     .radio-group {
       display: flex;
       flex-direction: column;
@@ -134,13 +139,17 @@
       cursor: pointer;
     }
 
-    .radio-option.red  { border-left: 4px solid #ef4444; }
+    .radio-option.red    { border-left: 4px solid #ef4444; }
     .radio-option.yellow { border-left: 4px solid #f59e0b; }
     .radio-option.green  { border-left: 4px solid #22c55e; }
 
     .radio-option.red:has(input:checked)    { background: #fef2f2; border-color: #ef4444; }
     .radio-option.yellow:has(input:checked) { background: #fffbeb; border-color: #f59e0b; }
     .radio-option.green:has(input:checked)  { background: #f0fdf4; border-color: #22c55e; }
+    .radio-option:has(input:checked)        { border-color: #6366f1; background: #eef2ff; }
+    .radio-option.red:has(input:checked),
+    .radio-option.yellow:has(input:checked),
+    .radio-option.green:has(input:checked)  { border-color: inherit; background: inherit; }
 
     .radio-label {
       font-size: 13.5px;
@@ -161,32 +170,6 @@
     .radio-label strong.red    { background: #ef4444; }
     .radio-label strong.yellow { background: #f59e0b; }
     .radio-label strong.green  { background: #22c55e; }
-
-    /* Progress slider */
-    .progress-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    input[type="range"] {
-      flex: 1;
-      accent-color: #6366f1;
-      height: 6px;
-      cursor: pointer;
-    }
-
-    .progress-display {
-      width: 52px;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 600;
-      color: #6366f1;
-      background: #eef2ff;
-      border-radius: 6px;
-      padding: 4px 6px;
-      flex-shrink: 0;
-    }
 
     .divider {
       border: none;
@@ -252,8 +235,8 @@
 <body>
   <div class="card">
     <div class="card-header">
-      <h1>Initiative Update</h1>
-      <p>Complete the fields below. Locked fields were pre-populated and cannot be edited.</p>
+      <h1>Annual Target Update</h1>
+      <p>Use this form to provide your quarterly update for the SCPO Annual Targets. Some fields are pre-populated from previous quarter input and cannot be edited.</p>
     </div>
 
     <form id="initiative-form" novalidate>
@@ -289,12 +272,14 @@
       <!-- FY26 Q3 Update -->
       <div class="field-group">
         <label for="fy26_q3_update">FY26 Q3 Update <span class="badge-locked">Locked</span></label>
+        <p class="field-hint">This is pre-populated from the previous quarter's QGP input.</p>
         <textarea id="fy26_q3_update" name="fy26_q3_update" rows="3" disabled placeholder="—"></textarea>
       </div>
 
       <!-- FY26 Q4 Update -->
       <div class="field-group">
         <label for="fy26_q4_update">FY26 Q4 Update</label>
+        <p class="field-hint">Provide commentary, wins, risks, and/or challenges related to the Annual Target.</p>
         <textarea id="fy26_q4_update" name="fy26_q4_update" rows="4" placeholder="Enter your Q4 update..."></textarea>
       </div>
 
@@ -330,17 +315,29 @@
 
       <!-- Progress towards target achievement -->
       <div class="field-group">
-        <label for="progress">Progress towards target achievement</label>
-        <div class="progress-wrapper">
-          <input
-            type="range"
-            id="progress"
-            name="progress"
-            min="0" max="100" step="1"
-            value="0"
-            oninput="document.getElementById('progress_display').textContent = this.value + '%'"
-          />
-          <span class="progress-display" id="progress_display">0%</span>
+        <label>Progress towards target achievement</label>
+        <p class="field-hint">Select the percentage that best matches the progress towards completion of achieving the target.</p>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="progress" value="0" />
+            <span class="radio-label">0%</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="progress" value="25" />
+            <span class="radio-label">25%</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="progress" value="50" />
+            <span class="radio-label">50%</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="progress" value="75" />
+            <span class="radio-label">75%</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="progress" value="100" />
+            <span class="radio-label">100%</span>
+          </label>
         </div>
       </div>
 
@@ -353,16 +350,13 @@
   </div>
 
   <script>
-    // ── Configuration ──────────────────────────────────────────────
-    // Replace with your deployed Cloudflare Worker URL
     const WORKER_URL = 'https://qgp-quarterly-update.bailey-huddleston.workers.dev/submit';
 
-    // ── Prefill from URL params ────────────────────────────────────
     const params = new URLSearchParams(window.location.search);
+    const RECORD_ID = params.get('record_id') || null;
 
     const LOCKED_FIELDS = ['scpo_owner', 'scpt_owner', 'annual_target', 'measure_of_success', 'fy26_q3_update'];
     const PREFILL_EDITABLE = ['fy26_q4_update'];
-    const RECORD_ID = params.get('record_id') || null;
 
     [...LOCKED_FIELDS, ...PREFILL_EDITABLE].forEach(key => {
       if (params.has(key)) {
@@ -371,13 +365,18 @@
       }
     });
 
-    // ── Form submission ────────────────────────────────────────────
     document.getElementById('initiative-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const health = document.querySelector('input[name="initiative_health"]:checked');
       if (!health) {
         showStatus('Please select an Initiative Health status.', 'error');
+        return;
+      }
+
+      const progressEl = document.querySelector('input[name="progress"]:checked');
+      if (!progressEl) {
+        showStatus('Please select a Progress towards target achievement.', 'error');
         return;
       }
 
@@ -393,7 +392,7 @@
           'FY26 Q3 Update':                      document.getElementById('fy26_q3_update')?.value ?? '',
           'FY26 Q4 Update':                      document.getElementById('fy26_q4_update')?.value ?? '',
           'Initiative Health':                   health.value,
-          'Progress towards target achievement': Number(document.getElementById('progress')?.value ?? 0),
+          'Progress towards target achievement': Number(progressEl.value),
           ...(RECORD_ID && { _record_id: RECORD_ID }),
         };
 
@@ -405,12 +404,8 @@
 
         if (res.ok) {
           showStatus('Your update was submitted successfully. Thank you!', 'success');
-          document.getElementById('initiative-form').querySelectorAll('textarea:not(:disabled)').forEach(el => el.value = '');
-          document.querySelectorAll('input[name="initiative_health"]').forEach(r => r.checked = false);
-          const progress = document.getElementById('progress');
-          const progressDisplay = document.getElementById('progress_display');
-          if (progress) progress.value = 0;
-          if (progressDisplay) progressDisplay.textContent = '0%';
+          document.getElementById('fy26_q4_update').value = '';
+          document.querySelectorAll('input[name="initiative_health"], input[name="progress"]').forEach(r => r.checked = false);
         } else {
           const err = await res.json().catch(() => ({}));
           showStatus('Submission failed: ' + (err.error?.message || res.statusText), 'error');
@@ -424,6 +419,7 @@
 
     function showStatus(msg, type) {
       const el = document.getElementById('status-msg');
+      if (!el) return;
       el.textContent = msg;
       el.className = 'status-msg ' + type;
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
