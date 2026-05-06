@@ -10,8 +10,8 @@
 
 export default {
   async fetch(request, env) {
-    const origin = request.headers.get('Origin') || '';
     const allowedOrigin = env.ALLOWED_ORIGIN || '*';
+    const formBaseUrl = `${env.ALLOWED_ORIGIN}/initiative-form/`;
 
     const corsHeaders = {
       'Access-Control-Allow-Origin': allowedOrigin,
@@ -24,8 +24,53 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    // Only accept POST to /submit
     const url = new URL(request.url);
+
+    // ── GET /prefill?id=recXXXXXX ──────────────────────────────────
+    // Fetches the Airtable record and redirects to the form with all
+    // prefill values encoded as URL parameters.
+    if (request.method === 'GET' && url.pathname === '/prefill') {
+      const recordId = url.searchParams.get('id');
+      if (!recordId) {
+        return new Response('Missing ?id parameter', { status: 400 });
+      }
+
+      const atRes = await fetch(
+        `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}/${recordId}`,
+        { headers: { 'Authorization': `Bearer ${env.AIRTABLE_TOKEN}` } }
+      );
+
+      if (!atRes.ok) {
+        const err = await atRes.json().catch(() => ({}));
+        return new Response(JSON.stringify({ error: 'Record not found', detail: err }), {
+          status: atRes.status,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { fields } = await atRes.json();
+
+      // Map Airtable field names → URL param keys
+      const paramMap = {
+        'SCPO Owner':         'scpo_owner',
+        'SCPT Owner':         'scpt_owner',
+        'Annual Target':      'annual_target',
+        'Measure of Success': 'measure_of_success',
+        'FY26 Q3 Update':     'fy26_q3_update',
+        'FY26 Q4 Update':     'fy26_q4_update',
+      };
+
+      const params = new URLSearchParams();
+      for (const [airtableField, paramKey] of Object.entries(paramMap)) {
+        if (fields[airtableField] != null) {
+          params.set(paramKey, fields[airtableField]);
+        }
+      }
+
+      return Response.redirect(`${formBaseUrl}?${params.toString()}`, 302);
+    }
+
+    // Only accept POST to /submit
     if (request.method !== 'POST' || url.pathname !== '/submit') {
       return new Response(JSON.stringify({ error: 'Not found' }), {
         status: 404,
