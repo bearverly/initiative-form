@@ -26,6 +26,25 @@ export default {
 
     const url = new URL(request.url);
 
+    // ── GET /debug?id=recXXXXXX ───────────────────────────────────
+    // Returns the raw field names and values from Airtable for a record.
+    // Use this to verify exact field names. Remove or restrict in production.
+    if (request.method === 'GET' && url.pathname === '/debug') {
+      const recordId = url.searchParams.get('id');
+      if (!recordId) return new Response('Missing ?id parameter', { status: 400 });
+
+      const atRes = await fetch(
+        `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}/${recordId}`,
+        { headers: { 'Authorization': `Bearer ${env.AIRTABLE_TOKEN}` } }
+      );
+
+      const data = await atRes.json();
+      return new Response(JSON.stringify(data, null, 2), {
+        status: atRes.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     // ── GET /prefill?id=recXXXXXX ──────────────────────────────────
     // Fetches the Airtable record and redirects to the form with all
     // prefill values encoded as URL parameters.
