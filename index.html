@@ -366,7 +366,7 @@
     [...LOCKED_FIELDS, ...PREFILL_EDITABLE].forEach(key => {
       if (params.has(key)) {
         const el = document.getElementById(key);
-        if (el) el.value = decodeURIComponent(params.get(key));
+        if (el) el.value = params.get(key);
       }
     });
 
