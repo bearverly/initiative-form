@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Initiative Update Form</title>
+  <title>QGP Quarterly Target Update</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -252,8 +252,8 @@
 <body>
   <div class="card">
     <div class="card-header">
-      <h1>Initiative Update</h1>
-      <p>Complete the fields below. Locked fields were pre-populated and cannot be edited.</p>
+      <h1>Annual Target Update</h1>
+      <p>Use this form to provide your quarterly update for the SCPO Annual Targets. Some fields are pre-populated from previous quarter input and cannot be edited.</p>
     </div>
 
     <form id="initiative-form" novalidate>
@@ -289,12 +289,14 @@
       <!-- FY26 Q3 Update -->
       <div class="field-group">
         <label for="fy26_q3_update">FY26 Q3 Update <span class="badge-locked">Locked</span></label>
+        <p>This is pre-populated from the previous quarter's QGP input.</p>
         <textarea id="fy26_q3_update" name="fy26_q3_update" rows="3" disabled placeholder="—"></textarea>
       </div>
 
       <!-- FY26 Q4 Update -->
       <div class="field-group">
         <label for="fy26_q4_update">FY26 Q4 Update</label>
+        <p>Provide commentary, wins, risks, and/or challenges related to the Annual Target.</p>
         <textarea id="fy26_q4_update" name="fy26_q4_update" rows="4" placeholder="Enter your Q4 update..."></textarea>
       </div>
 
@@ -330,17 +332,43 @@
 
       <!-- Progress towards target achievement -->
       <div class="field-group">
-        <label for="progress">Progress towards target achievement</label>
-        <div class="progress-wrapper">
-          <input
-            type="range"
-            id="progress"
-            name="progress"
-            min="0" max="100" step="1"
-            value="0"
-            oninput="document.getElementById('progress_display').textContent = this.value + '%'"
-          />
-          <span class="progress-display" id="progress_display">0%</span>
+        <label>Progress towards target achievement</label>
+        <div class="radio-group">
+          <label class="radio-option red">
+            <input type="radio" name="Progress towards target achievement" />
+            <span class="radio-label">
+              <strong class="red">Red</strong>
+              0%
+            </span>
+          </label>
+          <label class="radio-option yellow">
+            <input type="radio" name="Progress towards target achievement" />
+            <span class="radio-label">
+              <strong class="yellow">Yellow</strong>
+              25%
+            </span>
+          </label>
+          <label class="radio-option green">
+            <input type="radio" name="Progress towards target achievement" />
+            <span class="radio-label">
+              <strong class="green">Green</strong>
+              50%
+            </span>
+          </label>
+          <label class="radio-option green">
+            <input type="radio" name="Progress towards target achievement" />
+            <span class="radio-label">
+              <strong class="green">Green</strong>
+              75%
+            </span>
+          </label>
+          <label class="radio-option green">
+            <input type="radio" name="Progress towards target achievement" />
+            <span class="radio-label">
+              <strong class="green">Green</strong>
+              100%
+            </span>
+          </label>
         </div>
       </div>
 
