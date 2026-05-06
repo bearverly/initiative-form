@@ -80,6 +80,8 @@ export default {
       };
 
       const params = new URLSearchParams();
+      // Pass the record ID so the form can update the existing record on submit
+      params.set('record_id', recordId);
       for (const [airtableField, paramKey] of Object.entries(paramMap)) {
         if (fields[airtableField] != null) {
           params.set(paramKey, fields[airtableField]);
@@ -98,9 +100,9 @@ export default {
     }
 
     // Parse request body
-    let fields;
+    let body;
     try {
-      fields = await request.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
         status: 400,
@@ -108,8 +110,13 @@ export default {
       });
     }
 
+    // Extract record ID from payload (not a real Airtable field)
+    const recordId = body._record_id;
+    delete body._record_id;
+    const fields = body;
+
     // Validate required fields
-    const required = ['SCPO Owner', 'SCPT Owner', 'Initiative Health'];
+    const required = ['Initiative Health'];
     for (const key of required) {
       if (!fields[key]) {
         return new Response(JSON.stringify({ error: `Missing required field: ${key}` }), {
@@ -119,18 +126,19 @@ export default {
       }
     }
 
-    // Forward to Airtable
-    const airtableRes = await fetch(
-      `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${env.AIRTABLE_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fields }),
-      }
-    );
+    // PATCH existing record if record ID provided, otherwise POST a new record
+    const airtableUrl = recordId
+      ? `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}/${recordId}`
+      : `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}`;
+
+    const airtableRes = await fetch(airtableUrl, {
+      method: recordId ? 'PATCH' : 'POST',
+      headers: {
+        'Authorization': `Bearer ${env.AIRTABLE_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields }),
+    });
 
     const data = await airtableRes.json();
 

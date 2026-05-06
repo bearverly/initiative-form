@@ -391,6 +391,7 @@
 
     const LOCKED_FIELDS = ['scpo_owner', 'scpt_owner', 'annual_target', 'measure_of_success', 'fy26_q3_update'];
     const PREFILL_EDITABLE = ['fy26_q4_update'];
+    const RECORD_ID = params.get('record_id') || null;
 
     [...LOCKED_FIELDS, ...PREFILL_EDITABLE].forEach(key => {
       if (params.has(key)) {
@@ -415,13 +416,14 @@
 
       const fields = {
         'SCPO Owner':                          document.getElementById('scpo_owner').value,
-        'SCPT Owner':                          document.getElementById('scpt_owner').value,
+        'Tech Owner':                          document.getElementById('scpt_owner').value,
         'Annual Target':                       document.getElementById('annual_target').value,
         'Measure of Success':                  document.getElementById('measure_of_success').value,
         'FY26 Q3 Update':                      document.getElementById('fy26_q3_update').value,
         'FY26 Q4 Update':                      document.getElementById('fy26_q4_update').value,
         'Initiative Health':                   health.value,
         'Progress towards target achievement': Number(document.getElementById('progress').value),
+        ...(RECORD_ID && { _record_id: RECORD_ID }),
       };
 
       try {
