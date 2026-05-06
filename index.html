@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Initiative Update Form</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f4f5f7;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px 60px;
+      color: #1a1a2e;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+      padding: 40px 44px;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    .card-header {
+      margin-bottom: 32px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 24px;
+    }
+
+    .card-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .card-header p {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .field-group {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+
+    .badge-locked {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      background: #eef2ff;
+      color: #6366f1;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.03em;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1a1a2e;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: #fff;
+      resize: vertical;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    input:disabled,
+    textarea:disabled {
+      background: #f9fafb;
+      color: #6b7280;
+      border-color: #e5e7eb;
+      cursor: not-allowed;
+    }
+
+    /* Radio group - Initiative Health */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .radio-option:hover {
+      border-color: #d1d5db;
+      background: #fafafa;
+    }
+
+    .radio-option input[type="radio"] {
+      margin-top: 3px;
+      accent-color: #6366f1;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .radio-option.red  { border-left: 4px solid #ef4444; }
+    .radio-option.yellow { border-left: 4px solid #f59e0b; }
+    .radio-option.green  { border-left: 4px solid #22c55e; }
+
+    .radio-option.red:has(input:checked)    { background: #fef2f2; border-color: #ef4444; }
+    .radio-option.yellow:has(input:checked) { background: #fffbeb; border-color: #f59e0b; }
+    .radio-option.green:has(input:checked)  { background: #f0fdf4; border-color: #22c55e; }
+
+    .radio-label {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #374151;
+    }
+
+    .radio-label strong {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 4px;
+      color: #fff;
+    }
+
+    .radio-label strong.red    { background: #ef4444; }
+    .radio-label strong.yellow { background: #f59e0b; }
+    .radio-label strong.green  { background: #22c55e; }
+
+    /* Progress slider */
+    .progress-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: #6366f1;
+      height: 6px;
+      cursor: pointer;
+    }
+
+    .progress-display {
+      width: 52px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6366f1;
+      background: #eef2ff;
+      border-radius: 6px;
+      padding: 4px 6px;
+      flex-shrink: 0;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1.5px solid #f0f0f0;
+      margin: 28px 0;
+    }
+
+    .submit-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    button[type="submit"] {
+      padding: 11px 28px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    button[type="submit"]:hover  { background: #4f46e5; }
+    button[type="submit"]:active { transform: scale(0.98); }
+    button[type="submit"]:disabled {
+      background: #a5b4fc;
+      cursor: not-allowed;
+    }
+
+    .status-msg {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .status-msg.success {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      display: block;
+    }
+
+    .status-msg.error {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <h1>Initiative Update</h1>
+      <p>Complete the fields below. Locked fields were pre-populated and cannot be edited.</p>
+    </div>
+
+    <form id="initiative-form" novalidate>
+
+      <!-- SCPO Owner -->
+      <div class="field-group">
+        <label for="scpo_owner">SCPO Owner <span class="badge-locked">Locked</span></label>
+        <input type="text" id="scpo_owner" name="scpo_owner" disabled placeholder="—" />
+      </div>
+
+      <!-- SCPT Owner -->
+      <div class="field-group">
+        <label for="scpt_owner">SCPT Owner <span class="badge-locked">Locked</span></label>
+        <input type="text" id="scpt_owner" name="scpt_owner" disabled placeholder="—" />
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Annual Target -->
+      <div class="field-group">
+        <label for="annual_target">Annual Target <span class="badge-locked">Locked</span></label>
+        <textarea id="annual_target" name="annual_target" rows="3" disabled placeholder="—"></textarea>
+      </div>
+
+      <!-- Measure of Success -->
+      <div class="field-group">
+        <label for="measure_of_success">Measure of Success <span class="badge-locked">Locked</span></label>
+        <textarea id="measure_of_success" name="measure_of_success" rows="3" disabled placeholder="—"></textarea>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- FY26 Q3 Update -->
+      <div class="field-group">
+        <label for="fy26_q3_update">FY26 Q3 Update <span class="badge-locked">Locked</span></label>
+        <textarea id="fy26_q3_update" name="fy26_q3_update" rows="3" disabled placeholder="—"></textarea>
+      </div>
+
+      <!-- FY26 Q4 Update -->
+      <div class="field-group">
+        <label for="fy26_q4_update">FY26 Q4 Update</label>
+        <textarea id="fy26_q4_update" name="fy26_q4_update" rows="4" placeholder="Enter your Q4 update..."></textarea>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Initiative Health -->
+      <div class="field-group">
+        <label>Initiative Health</label>
+        <div class="radio-group">
+          <label class="radio-option red">
+            <input type="radio" name="initiative_health" value="Red" required />
+            <span class="radio-label">
+              <strong class="red">Red</strong>
+              We are not on track to hit the FY26 Annual Target AND don't have a plan to get on track. The miss will be a material driver of not reaching full-year goals.
+            </span>
+          </label>
+          <label class="radio-option yellow">
+            <input type="radio" name="initiative_health" value="Yellow" />
+            <span class="radio-label">
+              <strong class="yellow">Yellow</strong>
+              We are not on track to hit the FY26 Annual Target AND there is a plan to get on track. The miss is not expected to be a material driver of not reaching full-year goals.
+            </span>
+          </label>
+          <label class="radio-option green">
+            <input type="radio" name="initiative_health" value="Green" />
+            <span class="radio-label">
+              <strong class="green">Green</strong>
+              We are on track to hit FY26 Annual Target AND we do not foresee any upcoming risks.
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Progress towards target achievement -->
+      <div class="field-group">
+        <label for="progress">Progress towards target achievement</label>
+        <div class="progress-wrapper">
+          <input
+            type="range"
+            id="progress"
+            name="progress"
+            min="0" max="100" step="1"
+            value="0"
+            oninput="document.getElementById('progress_display').textContent = this.value + '%'"
+          />
+          <span class="progress-display" id="progress_display">0%</span>
+        </div>
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" id="submit-btn">Submit</button>
+      </div>
+
+      <div class="status-msg" id="status-msg"></div>
+    </form>
+  </div>
+
+  <script>
+    // ── Configuration ──────────────────────────────────────────────
+    // Replace with your deployed Cloudflare Worker URL
+    const WORKER_URL = 'https://YOUR_WORKER_SUBDOMAIN.workers.dev/submit';
+
+    // ── Prefill from URL params ────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+
+    const LOCKED_FIELDS = ['scpo_owner', 'scpt_owner', 'annual_target', 'measure_of_success', 'fy26_q3_update'];
+    const PREFILL_EDITABLE = ['fy26_q4_update'];
+
+    [...LOCKED_FIELDS, ...PREFILL_EDITABLE].forEach(key => {
+      if (params.has(key)) {
+        const el = document.getElementById(key);
+        if (el) el.value = decodeURIComponent(params.get(key));
+      }
+    });
+
+    // ── Form submission ────────────────────────────────────────────
+    document.getElementById('initiative-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const health = document.querySelector('input[name="initiative_health"]:checked');
+      if (!health) {
+        showStatus('Please select an Initiative Health status.', 'error');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      const fields = {
+        'SCPO Owner':                          document.getElementById('scpo_owner').value,
+        'SCPT Owner':                          document.getElementById('scpt_owner').value,
+        'Annual Target':                       document.getElementById('annual_target').value,
+        'Measure of Success':                  document.getElementById('measure_of_success').value,
+        'FY26 Q3 Update':                      document.getElementById('fy26_q3_update').value,
+        'FY26 Q4 Update':                      document.getElementById('fy26_q4_update').value,
+        'Initiative Health':                   health.value,
+        'Progress towards target achievement': Number(document.getElementById('progress').value),
+      };
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fields),
+        });
+
+        if (res.ok) {
+          showStatus('Your update was submitted successfully. Thank you!', 'success');
+          document.getElementById('initiative-form').querySelectorAll('textarea:not(:disabled)').forEach(el => el.value = '');
+          document.querySelectorAll('input[name="initiative_health"]').forEach(r => r.checked = false);
+          document.getElementById('progress').value = 0;
+          document.getElementById('progress_display').textContent = '0%';
+        } else {
+          const err = await res.json().catch(() => ({}));
+          showStatus('Submission failed: ' + (err.error?.message || res.statusText), 'error');
+        }
+      } catch (err) {
+        showStatus('Network error — please check your connection and try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+      }
+    });
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('status-msg');
+      el.textContent = msg;
+      el.className = 'status-msg ' + type;
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  </script>
+</body>
+</html>
