@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QGP Quarterly Target Update</title>
+  <title>Initiative Update Form</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -41,7 +41,7 @@
 
     .card-header p {
       margin-top: 6px;
-      font-size: 11px;
+      font-size: 14px;
       color: #6b7280;
     }
 
@@ -57,12 +57,7 @@
       margin-bottom: 6px;
       letter-spacing: 0.01em;
     }
-    label p {
-      margin-top: 6px;
-      font-size: 11px;
-      color: #010714;
-    }
-    
+
     .badge-locked {
       display: inline-block;
       font-size: 10px;
@@ -257,8 +252,8 @@
 <body>
   <div class="card">
     <div class="card-header">
-      <h1>Annual Target Update</h1>
-      <p>Use this form to provide your quarterly update for the SCPO Annual Targets. Some fields are pre-populated from previous quarter input and cannot be edited.</p>
+      <h1>Initiative Update</h1>
+      <p>Complete the fields below. Locked fields were pre-populated and cannot be edited.</p>
     </div>
 
     <form id="initiative-form" novalidate>
@@ -294,14 +289,12 @@
       <!-- FY26 Q3 Update -->
       <div class="field-group">
         <label for="fy26_q3_update">FY26 Q3 Update <span class="badge-locked">Locked</span></label>
-        <p class="small-text">This is pre-populated from the previous quarter's QGP input.</p>
         <textarea id="fy26_q3_update" name="fy26_q3_update" rows="3" disabled placeholder="—"></textarea>
       </div>
 
       <!-- FY26 Q4 Update -->
       <div class="field-group">
         <label for="fy26_q4_update">FY26 Q4 Update</label>
-        <p class="small-text">Provide commentary, wins, risks, and/or challenges related to the Annual Target.</p>
         <textarea id="fy26_q4_update" name="fy26_q4_update" rows="4" placeholder="Enter your Q4 update..."></textarea>
       </div>
 
@@ -337,39 +330,17 @@
 
       <!-- Progress towards target achievement -->
       <div class="field-group">
-        <label>Progress towards target achievement</label>
-        <p class="small-text">Select the percentage that best matches the progress towards completion of achieving the target.</p>
-        <div class="radio-group">
-          <label class="radio-option">
-            <input type="radio" name="Progress towards target achievement"/>
-            <span class="radio-label">
-              0%
-            </span>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="Progress towards target achievement"/>
-            <span class="radio-label">
-              25%
-            </span>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="Progress towards target achievement"/>
-            <span class="radio-label">
-              50%
-            </span>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="Progress towards target achievement"/>
-            <span class="radio-label">
-              75%
-            </span>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="Progress towards target achievement"/>
-            <span class="radio-label">
-              100%
-            </span>
-          </label>
+        <label for="progress">Progress towards target achievement</label>
+        <div class="progress-wrapper">
+          <input
+            type="range"
+            id="progress"
+            name="progress"
+            min="0" max="100" step="1"
+            value="0"
+            oninput="document.getElementById('progress_display').textContent = this.value + '%'"
+          />
+          <span class="progress-display" id="progress_display">0%</span>
         </div>
       </div>
 
@@ -411,22 +382,21 @@
       }
 
       const submitBtn = document.getElementById('submit-btn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting…';
-
-      const fields = {
-        'SCPO Owner':                          document.getElementById('scpo_owner').value,
-        'Tech Owner':                          document.getElementById('scpt_owner').value,
-        'Annual Target':                       document.getElementById('annual_target').value,
-        'Measure of Success':                  document.getElementById('measure_of_success').value,
-        'FY26 Q3 Update':                      document.getElementById('fy26_q3_update').value,
-        'FY26 Q4 Update':                      document.getElementById('fy26_q4_update').value,
-        'Initiative Health':                   health.value,
-        'Progress towards target achievement': Number(document.getElementById('progress').value),
-        ...(RECORD_ID && { _record_id: RECORD_ID }),
-      };
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
 
       try {
+        const fields = {
+          'SCPO Owner':                          document.getElementById('scpo_owner')?.value ?? '',
+          'Tech Owner':                          document.getElementById('scpt_owner')?.value ?? '',
+          'Annual Target':                       document.getElementById('annual_target')?.value ?? '',
+          'Measure of Success':                  document.getElementById('measure_of_success')?.value ?? '',
+          'FY26 Q3 Update':                      document.getElementById('fy26_q3_update')?.value ?? '',
+          'FY26 Q4 Update':                      document.getElementById('fy26_q4_update')?.value ?? '',
+          'Initiative Health':                   health.value,
+          'Progress towards target achievement': Number(document.getElementById('progress')?.value ?? 0),
+          ...(RECORD_ID && { _record_id: RECORD_ID }),
+        };
+
         const res = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -437,17 +407,18 @@
           showStatus('Your update was submitted successfully. Thank you!', 'success');
           document.getElementById('initiative-form').querySelectorAll('textarea:not(:disabled)').forEach(el => el.value = '');
           document.querySelectorAll('input[name="initiative_health"]').forEach(r => r.checked = false);
-          document.getElementById('progress').value = 0;
-          document.getElementById('progress_display').textContent = '0%';
+          const progress = document.getElementById('progress');
+          const progressDisplay = document.getElementById('progress_display');
+          if (progress) progress.value = 0;
+          if (progressDisplay) progressDisplay.textContent = '0%';
         } else {
           const err = await res.json().catch(() => ({}));
           showStatus('Submission failed: ' + (err.error?.message || res.statusText), 'error');
         }
       } catch (err) {
-        showStatus('Network error — please check your connection and try again.', 'error');
+        showStatus('Error: ' + err.message, 'error');
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit'; }
       }
     });
 
