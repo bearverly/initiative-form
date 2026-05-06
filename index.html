@@ -269,6 +269,12 @@
 
       <hr class="divider" />
 
+      <!-- Q3 Status Bar Attachment -->
+      <div class="field-group" id="q3-attachment-group" style="display:none;">
+        <label>Q3 Status Bar</label>
+        <div id="q3-attachment-content"></div>
+      </div>
+
       <!-- FY26 Q3 Update -->
       <div class="field-group">
         <label for="fy26_q3_update">FY26 Q3 Update <span class="badge-locked">Locked</span></label>
@@ -364,6 +370,29 @@
         if (el) el.value = params.get(key);
       }
     });
+
+    // Render Q3 status bar attachment if present
+    const attachmentUrl  = params.get('q3_attachment_url');
+    const attachmentName = params.get('q3_attachment_name') || 'Q3 Status Bar';
+    const attachmentType = params.get('q3_attachment_type') || '';
+    if (attachmentUrl) {
+      const group   = document.getElementById('q3-attachment-group');
+      const content = document.getElementById('q3-attachment-content');
+      if (group && content) {
+        if (attachmentType.startsWith('image/')) {
+          content.innerHTML = `<img src="${attachmentUrl}" alt="${attachmentName}"
+            style="max-width:100%;border-radius:8px;border:1.5px solid #e5e7eb;" />`;
+        } else {
+          content.innerHTML = `<a href="${attachmentUrl}" target="_blank" rel="noopener"
+            style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
+            background:#eef2ff;color:#4f46e5;border-radius:7px;font-size:13px;
+            font-weight:600;text-decoration:none;">
+            &#128206; ${attachmentName}
+          </a>`;
+        }
+        group.style.display = 'block';
+      }
+    }
 
     document.getElementById('initiative-form').addEventListener('submit', async (e) => {
       e.preventDefault();
