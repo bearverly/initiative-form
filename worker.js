@@ -89,7 +89,7 @@ export default {
       }
 
       // Pass the first attachment URL and filename if present
-      const attachments = fields['Attachments (from Q3 status bar)'];
+      const attachments = fields['Attachments (from Q3 Status Bar)'];
       if (Array.isArray(attachments) && attachments.length > 0) {
         params.set('q3_attachment_url', attachments[0].url);
         params.set('q3_attachment_name', attachments[0].filename ?? 'Q3 Status Bar');
