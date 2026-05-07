@@ -106,10 +106,9 @@ export default {
       let offset = null;
 
       do {
-        const params = new URLSearchParams({
-          fields: ['Annual Target'],
-          ...(offset && { offset }),
-        });
+        const params = new URLSearchParams();
+        params.append('fields[]', 'Annual Target');
+        if (offset) params.append('offset', offset);
 
         const atRes = await fetch(
           `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}?${params}`,
