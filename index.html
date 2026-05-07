@@ -24,7 +24,7 @@
       box-shadow: 0 2px 16px rgba(0,0,0,0.10);
       padding: 40px 44px;
       width: 100%;
-      max-width: 680px;
+      max-width: 860px;
     }
 
     .card-header {
@@ -150,6 +150,68 @@
     .radio-option.red:has(input:checked),
     .radio-option.yellow:has(input:checked),
     .radio-option.green:has(input:checked)  { border-color: inherit; background: inherit; }
+
+    .checkbox-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .checkbox-option:hover:not(.disabled) {
+      border-color: #d1d5db;
+      background: #fafafa;
+    }
+
+    .checkbox-option.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .checkbox-option input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: #6366f1;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .checkbox-option.disabled input[type="checkbox"] {
+      cursor: not-allowed;
+    }
+
+    .checkbox-option:has(input:checked) {
+      border-color: #6366f1;
+      background: #eef2ff;
+    }
+
+    .checkbox-label {
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #374151;
+    }
+
+    .selection-counter {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    .selection-counter.at-limit {
+      color: #6366f1;
+      font-weight: 600;
+    }
+
+    .targets-loading {
+      font-size: 13px;
+      color: #9ca3af;
+      padding: 12px 0;
+    }
 
     .radio-label {
       font-size: 13.5px;
@@ -347,6 +409,18 @@
         </div>
       </div>
 
+      <hr class="divider" />
+
+      <!-- QGP Discussion Topics -->
+      <div class="field-group">
+        <label>Which topics would you like to speak to or hear about during QGP?</label>
+        <p class="field-hint">Please select up to 3 annual targets you would either like to speak or hear more about related to wins, risks, challenges, etc.</p>
+        <div class="selection-counter" id="topic-counter">0 of 3 selected</div>
+        <div class="radio-group" id="topics-group" style="margin-top: 10px;">
+          <div class="targets-loading">Loading annual targets…</div>
+        </div>
+      </div>
+
       <div class="submit-row">
         <button type="submit" id="submit-btn">Submit</button>
       </div>
@@ -356,7 +430,8 @@
   </div>
 
   <script>
-    const WORKER_URL = 'https://qgp-quarterly-update.bailey-huddleston.workers.dev/submit';
+    const WORKER_BASE = 'https://qgp-quarterly-update.bailey-huddleston.workers.dev';
+    const WORKER_URL  = `${WORKER_BASE}/submit`;
 
     const params = new URLSearchParams(window.location.search);
     const RECORD_ID = params.get('record_id') || null;
@@ -413,6 +488,9 @@
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
 
       try {
+        const selectedTopics = [...document.querySelectorAll('input[name="qgp_topics"]:checked')]
+          .map(cb => cb.value);
+
         const fields = {
           'SCPO Owner':                          document.getElementById('scpo_owner')?.value ?? '',
           'Tech Owner':                          document.getElementById('scpt_owner')?.value ?? '',
@@ -422,6 +500,7 @@
           'FY26 Q4 Update':                      document.getElementById('fy26_q4_update')?.value ?? '',
           'Initiative Health':                   health.value,
           'Progress towards target achievement': Number(progressEl.value),
+          ...(selectedTopics.length > 0 && { 'QGP Discussion Topics': selectedTopics.join(', ') }),
           ...(RECORD_ID && { _record_id: RECORD_ID }),
         };
 
@@ -453,6 +532,62 @@
       el.className = 'status-msg ' + type;
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+
+    // ── Annual targets multi-select ──────────────────────────────
+    const MAX_TOPICS = 3;
+
+    async function loadTargets() {
+      const group   = document.getElementById('topics-group');
+      const counter = document.getElementById('topic-counter');
+
+      try {
+        const res  = await fetch(`${WORKER_BASE}/targets`);
+        const data = await res.json();
+        const targets = data.targets ?? [];
+
+        if (targets.length === 0) {
+          group.innerHTML = '<p class="targets-loading">No targets found.</p>';
+          return;
+        }
+
+        group.innerHTML = targets.map((t, i) => `
+          <label class="checkbox-option" id="topic-label-${i}">
+            <input type="checkbox" name="qgp_topics" value="${t.replace(/"/g, '&quot;')}" />
+            <span class="checkbox-label">${t}</span>
+          </label>
+        `).join('');
+
+        group.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.addEventListener('change', () => updateTopicState(group, counter));
+        });
+
+      } catch {
+        group.innerHTML = '<p class="targets-loading">Could not load targets. Please refresh.</p>';
+      }
+    }
+
+    function updateTopicState(group, counter) {
+      const all     = [...group.querySelectorAll('input[type="checkbox"]')];
+      const checked = all.filter(cb => cb.checked);
+      const count   = checked.length;
+      const atLimit = count >= MAX_TOPICS;
+
+      counter.textContent = `${count} of ${MAX_TOPICS} selected`;
+      counter.className   = 'selection-counter' + (atLimit ? ' at-limit' : '');
+
+      all.forEach(cb => {
+        const label = cb.closest('.checkbox-option');
+        if (!cb.checked && atLimit) {
+          cb.disabled = true;
+          label.classList.add('disabled');
+        } else {
+          cb.disabled = false;
+          label.classList.remove('disabled');
+        }
+      });
+    }
+
+    loadTargets();
   </script>
 </body>
 </html>

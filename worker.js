@@ -99,6 +99,45 @@ export default {
       return Response.redirect(`${formBaseUrl}?${params.toString()}`, 302);
     }
 
+    // ── GET /targets ──────────────────────────────────────────────
+    // Returns all unique, non-empty Annual Target values from Airtable.
+    if (request.method === 'GET' && url.pathname === '/targets') {
+      const targets = [];
+      let offset = null;
+
+      do {
+        const params = new URLSearchParams({
+          fields: ['Annual Target'],
+          ...(offset && { offset }),
+        });
+
+        const atRes = await fetch(
+          `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}?${params}`,
+          { headers: { 'Authorization': `Bearer ${env.AIRTABLE_TOKEN}` } }
+        );
+
+        const data = await atRes.json();
+        if (!atRes.ok) {
+          return new Response(JSON.stringify({ error: data }), {
+            status: atRes.status,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        for (const record of data.records ?? []) {
+          const val = record.fields?.['Annual Target'];
+          if (val && !targets.includes(val)) targets.push(val);
+        }
+
+        offset = data.offset ?? null;
+      } while (offset);
+
+      return new Response(JSON.stringify({ targets }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Only accept POST to /submit
     if (request.method !== 'POST' || url.pathname !== '/submit') {
       return new Response(JSON.stringify({ error: 'Not found' }), {
