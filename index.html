@@ -151,50 +151,132 @@
     .radio-option.yellow:has(input:checked),
     .radio-option.green:has(input:checked)  { border-color: inherit; background: inherit; }
 
-    .checkbox-option {
+    .multiselect-wrapper {
+      position: relative;
+    }
+
+    .multiselect-trigger {
+      width: 100%;
+      padding: 10px 36px 10px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+      position: relative;
+    }
+
+    .multiselect-trigger:focus,
+    .multiselect-trigger.open {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+
+    .multiselect-trigger::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #6b7280;
+      pointer-events: none;
+    }
+
+    .multiselect-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      z-index: 100;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .multiselect-dropdown.open {
+      display: block;
+    }
+
+    .multiselect-item {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      padding: 12px 14px;
-      border: 1.5px solid #e5e7eb;
-      border-radius: 8px;
+      padding: 10px 14px;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: background 0.1s;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 13.5px;
+      color: #374151;
+      line-height: 1.4;
     }
 
-    .checkbox-option:hover:not(.disabled) {
-      border-color: #d1d5db;
-      background: #fafafa;
-    }
+    .multiselect-item:last-child { border-bottom: none; }
 
-    .checkbox-option.disabled {
-      opacity: 0.45;
+    .multiselect-item:hover:not(.disabled) { background: #f9fafb; }
+
+    .multiselect-item.selected { background: #eef2ff; }
+
+    .multiselect-item.disabled {
+      opacity: 0.4;
       cursor: not-allowed;
     }
 
-    .checkbox-option input[type="checkbox"] {
-      margin-top: 3px;
+    .multiselect-item input[type="checkbox"] {
+      margin-top: 2px;
       accent-color: #6366f1;
       flex-shrink: 0;
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
       cursor: pointer;
     }
 
-    .checkbox-option.disabled input[type="checkbox"] {
-      cursor: not-allowed;
+    .multiselect-item.disabled input[type="checkbox"] { cursor: not-allowed; }
+
+    .multiselect-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
     }
 
-    .checkbox-option:has(input:checked) {
-      border-color: #6366f1;
+    .multiselect-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       background: #eef2ff;
+      color: #4f46e5;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 500;
     }
 
-    .checkbox-label {
-      font-size: 13.5px;
-      line-height: 1.5;
-      color: #374151;
+    .multiselect-tag button {
+      background: none;
+      border: none;
+      color: #6366f1;
+      cursor: pointer;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1;
+      margin-left: 2px;
     }
+
+    .multiselect-tag button:hover { color: #4338ca; }
 
     .selection-counter {
       font-size: 12px;
@@ -415,10 +497,14 @@
       <div class="field-group">
         <label>Which topics would you like to speak to or hear about during QGP?</label>
         <p class="field-hint">Please select up to 3 annual targets you would either like to speak or hear more about related to wins, risks, challenges, etc.</p>
-        <div class="selection-counter" id="topic-counter">0 of 3 selected</div>
-        <div class="radio-group" id="topics-group" style="margin-top: 10px;">
-          <div class="targets-loading">Loading annual targets…</div>
+        <div class="multiselect-wrapper" id="topics-wrapper">
+          <button type="button" class="multiselect-trigger" id="topics-trigger">
+            <span id="topics-trigger-text">Loading…</span>
+          </button>
+          <div class="multiselect-dropdown" id="topics-dropdown"></div>
         </div>
+        <div class="multiselect-tags" id="topics-tags"></div>
+        <div class="selection-counter" id="topic-counter">0 of 3 selected</div>
       </div>
 
       <div class="submit-row">
@@ -488,8 +574,7 @@
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
 
       try {
-        const selectedTopics = [...document.querySelectorAll('input[name="qgp_topics"]:checked')]
-          .map(cb => cb.value);
+        // selectedTopics is maintained by the dropdown multi-select above
 
         const fields = {
           'SCPO Owner':                          document.getElementById('scpo_owner')?.value ?? '',
@@ -533,57 +618,109 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // ── Annual targets multi-select ──────────────────────────────
+    // ── Annual targets dropdown multi-select ────────────────────
     const MAX_TOPICS = 3;
+    let selectedTopics = [];
 
     async function loadTargets() {
-      const group   = document.getElementById('topics-group');
-      const counter = document.getElementById('topic-counter');
+      const trigger     = document.getElementById('topics-trigger');
+      const triggerText = document.getElementById('topics-trigger-text');
+      const dropdown    = document.getElementById('topics-dropdown');
 
       try {
         const res  = await fetch(`${WORKER_BASE}/targets`);
         const data = await res.json();
-        const targets = data.targets ?? [];
+        const targets = (data.targets ?? []).filter(t => t.trim().toLowerCase() !== 'other');
 
         if (targets.length === 0) {
-          group.innerHTML = '<p class="targets-loading">No targets found.</p>';
+          triggerText.textContent = 'No targets available';
+          trigger.disabled = true;
           return;
         }
 
-        group.innerHTML = targets.map((t, i) => `
-          <label class="checkbox-option" id="topic-label-${i}">
-            <input type="checkbox" name="qgp_topics" value="${t.replace(/"/g, '&quot;')}" />
-            <span class="checkbox-label">${t}</span>
-          </label>
+        triggerText.textContent = 'Select annual targets…';
+
+        dropdown.innerHTML = targets.map((t, i) => `
+          <div class="multiselect-item" data-value="${t.replace(/"/g, '&quot;')}" data-index="${i}">
+            <input type="checkbox" id="topic-cb-${i}" />
+            <label for="topic-cb-${i}" style="cursor:pointer;flex:1;">${t}</label>
+          </div>
         `).join('');
 
-        group.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-          cb.addEventListener('change', () => updateTopicState(group, counter));
+        dropdown.querySelectorAll('.multiselect-item').forEach(item => {
+          item.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const val = item.dataset.value;
+            const cb  = item.querySelector('input');
+            if (cb.disabled) return;
+            cb.checked = !cb.checked;
+            if (cb.checked) {
+              if (!selectedTopics.includes(val)) selectedTopics.push(val);
+            } else {
+              selectedTopics = selectedTopics.filter(v => v !== val);
+            }
+            renderTags();
+            updateDropdownState();
+          });
+        });
+
+        trigger.addEventListener('click', () => {
+          const isOpen = dropdown.classList.toggle('open');
+          trigger.classList.toggle('open', isOpen);
+        });
+
+        document.addEventListener('click', e => {
+          if (!document.getElementById('topics-wrapper').contains(e.target)) {
+            dropdown.classList.remove('open');
+            trigger.classList.remove('open');
+          }
         });
 
       } catch {
-        group.innerHTML = '<p class="targets-loading">Could not load targets. Please refresh.</p>';
+        triggerText.textContent = 'Could not load targets — please refresh';
+        trigger.disabled = true;
       }
     }
 
-    function updateTopicState(group, counter) {
-      const all     = [...group.querySelectorAll('input[type="checkbox"]')];
-      const checked = all.filter(cb => cb.checked);
-      const count   = checked.length;
-      const atLimit = count >= MAX_TOPICS;
+    function renderTags() {
+      const tagsEl  = document.getElementById('topics-tags');
+      const counter = document.getElementById('topic-counter');
+      const triggerText = document.getElementById('topics-trigger-text');
 
+      tagsEl.innerHTML = selectedTopics.map(val => `
+        <span class="multiselect-tag">
+          ${val}
+          <button type="button" aria-label="Remove" data-val="${val.replace(/"/g, '&quot;')}">×</button>
+        </span>
+      `).join('');
+
+      tagsEl.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.dataset.val;
+          selectedTopics = selectedTopics.filter(v => v !== val);
+          const dropdown = document.getElementById('topics-dropdown');
+          const item = [...dropdown.querySelectorAll('.multiselect-item')]
+            .find(el => el.dataset.value === val);
+          if (item) item.querySelector('input').checked = false;
+          renderTags();
+          updateDropdownState();
+        });
+      });
+
+      const count = selectedTopics.length;
       counter.textContent = `${count} of ${MAX_TOPICS} selected`;
-      counter.className   = 'selection-counter' + (atLimit ? ' at-limit' : '');
+      counter.className   = 'selection-counter' + (count >= MAX_TOPICS ? ' at-limit' : '');
+      triggerText.textContent = count === 0 ? 'Select annual targets…' : `${count} target${count > 1 ? 's' : ''} selected`;
+    }
 
-      all.forEach(cb => {
-        const label = cb.closest('.checkbox-option');
-        if (!cb.checked && atLimit) {
-          cb.disabled = true;
-          label.classList.add('disabled');
-        } else {
-          cb.disabled = false;
-          label.classList.remove('disabled');
-        }
+    function updateDropdownState() {
+      const atLimit = selectedTopics.length >= MAX_TOPICS;
+      document.querySelectorAll('#topics-dropdown .multiselect-item').forEach(item => {
+        const cb  = item.querySelector('input');
+        const off = !cb.checked && atLimit;
+        cb.disabled = off;
+        item.classList.toggle('disabled', off);
+        item.classList.toggle('selected', cb.checked);
       });
     }
 

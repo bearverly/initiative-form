@@ -123,7 +123,7 @@ export default {
 
         for (const record of data.records ?? []) {
           const val = record.fields?.['Annual Target'];
-          if (val && !targets.includes(val)) targets.push(val);
+          if (val && val.trim().toLowerCase() !== 'other' && !targets.includes(val)) targets.push(val);
         }
 
         offset = data.offset ?? null;
