@@ -15,7 +15,7 @@ export default {
 
     const corsHeaders = {
       'Access-Control-Allow-Origin': allowedOrigin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
 
@@ -115,7 +115,7 @@ export default {
 
         const data = await atRes.json();
         if (!atRes.ok) {
-          return new Response(JSON.stringify({ error: data }), {
+          return new Response(JSON.stringify({ error: data, debug_url: atUrl.replace(env.AIRTABLE_BASE_ID, 'BASE_REDACTED') }), {
             status: atRes.status,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
