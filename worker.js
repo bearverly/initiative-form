@@ -106,14 +106,12 @@ export default {
       let offset = null;
 
       do {
-        const params = new URLSearchParams();
-        params.append('fields[]', 'Annual Target');
-        if (offset) params.append('offset', offset);
+        let atUrl = `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}`;
+        if (offset) atUrl += `?offset=${encodeURIComponent(offset)}`;
 
-        const atRes = await fetch(
-          `https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}?${params}`,
-          { headers: { 'Authorization': `Bearer ${env.AIRTABLE_TOKEN}` } }
-        );
+        const atRes = await fetch(atUrl, {
+          headers: { 'Authorization': `Bearer ${env.AIRTABLE_TOKEN}` },
+        });
 
         const data = await atRes.json();
         if (!atRes.ok) {
